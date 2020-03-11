@@ -1,0 +1,55 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            // "port": 2345,
+            // "host": "127.0.0.1",
+            // "program": "${fileDirname}",
+            "program": "${workspaceFolder}/cmd/server/main.go",
+            "env": {},
+            "args": [
+                "-grpc-port=9090",
+                "-http-port=8080",
+                "-db-host=localhost",
+                "-db-port=5432",
+                "-db-user=appuser",
+                "-db-password=P@ssw0rd!",
+                "-db-schema=ToDo",
+                "-log-level=-1",
+                "-log-time-format=2006-01-02T15:04:05.999999999Z07:00?"
+            ],
+            "showLog": false
+        },
+        {
+            "name": "client-grpc",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/client-grpc/main.go",
+            "env": {},
+            "args": [
+                "-server=localhost:9090"
+            ],
+            "showLog": false
+        },
+        {
+            "name": "client-rest",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/client-rest/main.go",
+            "env": {},
+            "args": [
+                "-server=http://localhost:8080"
+            ],
+            "showLog": false
+        }
+    ]
+}
