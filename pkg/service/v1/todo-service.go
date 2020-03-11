@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/rs/xid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/amsokol/go-grpc-http-rest-microservice-tutorial/pkg/api/v1"
+	v1 "github.com/amsokol/go-grpc-http-rest-microservice-tutorial/pkg/api/v1"
 )
 
 const (
@@ -69,17 +70,23 @@ func (s *toDoServiceServer) Create(ctx context.Context, req *v1.CreateRequest) (
 	}
 
 	// insert ToDo entity data
-	res, err := c.ExecContext(ctx, "INSERT INTO ToDo(`Title`, `Description`, `Reminder`) VALUES(?, ?, ?)",
-		req.ToDo.Title, req.ToDo.Description, reminder)
+	id := xid.New().String()
+	res, err := c.ExecContext(ctx, `INSERT INTO "Activities" ("ID", "Title", "Description", "Reminder") VALUES ($1, $2, $3, $4)`,
+		id, req.ToDo.Title, req.ToDo.Description, reminder)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to insert into ToDo-> "+err.Error())
 	}
 
 	// get ID of creates ToDo
-	id, err := res.LastInsertId()
-	if err != nil {
+	rows, err := res.RowsAffected()
+	if err != nil && rows == 0 {
 		return nil, status.Error(codes.Unknown, "failed to retrieve id for created ToDo-> "+err.Error())
 	}
+
+	/* id, err := res.LastInsertId()
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "failed to retrieve id for created ToDo-> "+err.Error())
+	} */
 
 	return &v1.CreateResponse{
 		Api: apiVersion,
@@ -102,7 +109,7 @@ func (s *toDoServiceServer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.
 	defer c.Close()
 
 	// query ToDo by ID
-	rows, err := c.QueryContext(ctx, "SELECT `ID`, `Title`, `Description`, `Reminder` FROM ToDo WHERE `ID`=?",
+	rows, err := c.QueryContext(ctx, `SELECT "ID", "Title", "Description", "Reminder" FROM "Activities" WHERE "ID" = $1`,
 		req.Id)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to select from ToDo-> "+err.Error())
@@ -113,7 +120,7 @@ func (s *toDoServiceServer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.
 		if err := rows.Err(); err != nil {
 			return nil, status.Error(codes.Unknown, "failed to retrieve data from ToDo-> "+err.Error())
 		}
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%d' is not found",
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%s' is not found",
 			req.Id))
 	}
 
@@ -129,7 +136,7 @@ func (s *toDoServiceServer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.
 	}
 
 	if rows.Next() {
-		return nil, status.Error(codes.Unknown, fmt.Sprintf("found multiple ToDo rows with ID='%d'",
+		return nil, status.Error(codes.Unknown, fmt.Sprintf("found multiple ToDo rows with ID='%s'",
 			req.Id))
 	}
 
@@ -160,7 +167,7 @@ func (s *toDoServiceServer) Update(ctx context.Context, req *v1.UpdateRequest) (
 	}
 
 	// update ToDo
-	res, err := c.ExecContext(ctx, "UPDATE ToDo SET `Title`=?, `Description`=?, `Reminder`=? WHERE `ID`=?",
+	res, err := c.ExecContext(ctx, `UPDATE "Activities" SET "Title"=$1, "Description"=$2, "Reminder"=$3 WHERE "ID"=$4`,
 		req.ToDo.Title, req.ToDo.Description, reminder, req.ToDo.Id)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to update ToDo-> "+err.Error())
@@ -172,7 +179,7 @@ func (s *toDoServiceServer) Update(ctx context.Context, req *v1.UpdateRequest) (
 	}
 
 	if rows == 0 {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%d' is not found",
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%s' is not found",
 			req.ToDo.Id))
 	}
 
@@ -197,7 +204,7 @@ func (s *toDoServiceServer) Delete(ctx context.Context, req *v1.DeleteRequest) (
 	defer c.Close()
 
 	// delete ToDo
-	res, err := c.ExecContext(ctx, "DELETE FROM ToDo WHERE `ID`=?", req.Id)
+	res, err := c.ExecContext(ctx, `DELETE FROM "Activities" WHERE "ID"=$1`, req.Id)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to delete ToDo-> "+err.Error())
 	}
@@ -208,7 +215,7 @@ func (s *toDoServiceServer) Delete(ctx context.Context, req *v1.DeleteRequest) (
 	}
 
 	if rows == 0 {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%d' is not found",
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%s' is not found",
 			req.Id))
 	}
 
@@ -233,7 +240,7 @@ func (s *toDoServiceServer) ReadAll(ctx context.Context, req *v1.ReadAllRequest)
 	defer c.Close()
 
 	// get ToDo list
-	rows, err := c.QueryContext(ctx, "SELECT `ID`, `Title`, `Description`, `Reminder` FROM ToDo")
+	rows, err := c.QueryContext(ctx, `SELECT "ID", "Title", "Description", "Reminder" FROM "Activities"`)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to select from ToDo-> "+err.Error())
 	}

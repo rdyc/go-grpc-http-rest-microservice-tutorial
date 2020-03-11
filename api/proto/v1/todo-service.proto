@@ -7,7 +7,7 @@ import "protoc-gen-swagger/options/annotations.proto";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 	info: {
-		title: "ToDo service";
+		title: "ToDo services";
 		version: "1.0";
 		contact: {
 			name: "go-grpc-http-rest-microservice-tutorial project";
@@ -33,8 +33,8 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 
 // Task we have to do
 message ToDo {
-    // Unique integer identifier of the todo task
-    int64 id = 1;
+    // Unique xid identifier of the todo task
+    string id = 1;
 
     // Title of the task
     string title = 2;
@@ -61,7 +61,7 @@ message CreateResponse{
     string api = 1;
 
     // ID of created task
-    int64 id = 2;
+    string id = 2;
 }
 
 // Request data to read todo task
@@ -69,8 +69,8 @@ message ReadRequest{
     // API versioning: it is my best practice to specify version explicitly
     string api = 1;
 
-    // Unique integer identifier of the todo task
-    int64 id = 2;
+    // Unique xid identifier of the todo task
+    string id = 2;
 }
 
 // Contains todo task data specified in by ID request
@@ -106,8 +106,8 @@ message DeleteRequest{
     // API versioning: it is my best practice to specify version explicitly
     string api = 1;
 
-    // Unique integer identifier of the todo task to delete
-    int64 id = 2;
+    // Unique xid identifier of the todo task to delete
+    string id = 2;
 }
 
 // Contains status of delete operation
@@ -148,7 +148,7 @@ service ToDoService {
     rpc Create(CreateRequest) returns (CreateResponse){
         option (google.api.http) = {
             post: "/v1/todo"
-            body: "*"
+            body: "*",
         };
     }
 

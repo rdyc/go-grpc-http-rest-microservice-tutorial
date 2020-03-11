@@ -7,12 +7,15 @@ import (
 	"fmt"
 
 	// mysql driver
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
+
+	// postgre driver
+	_ "github.com/lib/pq"
 
 	"github.com/amsokol/go-grpc-http-rest-microservice-tutorial/pkg/logger"
 	"github.com/amsokol/go-grpc-http-rest-microservice-tutorial/pkg/protocol/grpc"
 	"github.com/amsokol/go-grpc-http-rest-microservice-tutorial/pkg/protocol/rest"
-	"github.com/amsokol/go-grpc-http-rest-microservice-tutorial/pkg/service/v1"
+	v1 "github.com/amsokol/go-grpc-http-rest-microservice-tutorial/pkg/service/v1"
 )
 
 // Config is configuration for Server
@@ -28,6 +31,8 @@ type Config struct {
 	// DB Datastore parameters section
 	// DatastoreDBHost is host of database
 	DatastoreDBHost string
+	// DatastoreDBPort is port of database
+	DatastoreDBPort string
 	// DatastoreDBUser is username to connect to database
 	DatastoreDBUser string
 	// DatastoreDBPassword password to connect to database
@@ -51,6 +56,7 @@ func RunServer() error {
 	flag.StringVar(&cfg.GRPCPort, "grpc-port", "", "gRPC port to bind")
 	flag.StringVar(&cfg.HTTPPort, "http-port", "", "HTTP port to bind")
 	flag.StringVar(&cfg.DatastoreDBHost, "db-host", "", "Database host")
+	flag.StringVar(&cfg.DatastoreDBPort, "db-port", "", "Database port")
 	flag.StringVar(&cfg.DatastoreDBUser, "db-user", "", "Database user")
 	flag.StringVar(&cfg.DatastoreDBPassword, "db-password", "", "Database password")
 	flag.StringVar(&cfg.DatastoreDBSchema, "db-schema", "", "Database schema")
@@ -74,15 +80,27 @@ func RunServer() error {
 
 	// add MySQL driver specific parameter to parse date/time
 	// Drop it for another database
-	param := "parseTime=true"
+	/*
+		param := "parseTime=true"
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s",
+		dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s",
+			cfg.DatastoreDBUser,
+			cfg.DatastoreDBPassword,
+			cfg.DatastoreDBHost,
+			cfg.DatastoreDBSchema,
+			param)
+		db, err := sql.Open("mysql", dsn)
+	*/
+
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		cfg.DatastoreDBHost,
+		cfg.DatastoreDBPort,
 		cfg.DatastoreDBUser,
 		cfg.DatastoreDBPassword,
-		cfg.DatastoreDBHost,
-		cfg.DatastoreDBSchema,
-		param)
-	db, err := sql.Open("mysql", dsn)
+		cfg.DatastoreDBSchema)
+
+	db, err := sql.Open("postgres", dsn)
+
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
